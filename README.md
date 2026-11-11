@@ -26,16 +26,16 @@
 Linux/macOS：
 
 ```bash
-git clone https://github.com/black-pigeon/fpga_skills_for_codex.git
-cd fpga_skills_for_codex
+git clone https://github.com/black-pigeon/xilinx_fpga_skills_for_codex.git
+cd xilinx_fpga_skills_for_codex
 python3 install.py
 ```
 
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/black-pigeon/fpga_skills_for_codex.git
-cd fpga_skills_for_codex
+git clone https://github.com/black-pigeon/xilinx_fpga_skills_for_codex.git
+cd xilinx_fpga_skills_for_codex
 py -3 install.py
 ```
 
@@ -75,7 +75,7 @@ python3 install.py --dest ~/.codex/skills --update
 在另一台电脑的 Codex 中输入：
 
 ```text
-请使用 skill-installer，从 black-pigeon/fpga_skills_for_codex 仓库安装 skills/fpga-rtl-standards 和 skills/xilinx-jtag-debug。
+请使用 skill-installer，从 black-pigeon/xilinx_fpga_skills_for_codex 仓库安装 skills/fpga-rtl-standards 和 skills/xilinx-jtag-debug。
 ```
 
 系统安装器支持从 GitHub 的指定子目录安装；如果已存在同名目录，应先确认更新方式，避免误覆盖本机修改。

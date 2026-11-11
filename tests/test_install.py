@@ -30,7 +30,7 @@ class InstallTests(unittest.TestCase):
             if file.is_file():
                 self.assertEqual(file.read_bytes(), (target / file.relative_to(source)).read_bytes())
         receipt = json.loads((target / '.install-source.json').read_text())
-        self.assertEqual(receipt['repository'], 'https://github.com/black-pigeon/fpga_skills_for_codex')
+        self.assertEqual(receipt['repository'], 'https://github.com/black-pigeon/xilinx_fpga_skills_for_codex')
         self.assertEqual(receipt['path'], 'skills/' + NAME)
 
     def test_select_debug_skill_and_record_source(self):

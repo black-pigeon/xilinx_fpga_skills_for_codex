@@ -11,7 +11,7 @@ import tempfile
 from uuid import uuid4
 
 NAME = 'fpga-rtl-standards'
-REPOSITORY = 'https://github.com/black-pigeon/fpga_skills_for_codex'
+REPOSITORY = 'https://github.com/black-pigeon/xilinx_fpga_skills_for_codex'
 ROOT = Path(__file__).resolve().parent
 
 
