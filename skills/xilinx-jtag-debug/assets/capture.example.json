@@ -1,0 +1,14 @@
+{
+  "action": "capture",
+  "server": "localhost:3121",
+  "target": "exact target NAME from inventory",
+  "device": "exact device NAME from inventory",
+  "part": "xc7a200t",
+  "ltx": "/absolute/path/to/matching/debug_nets.ltx",
+  "ila": "exact ILA CELL_NAME from inventory",
+  "mode": "trigger",
+  "timeout_seconds": 10,
+  "trigger_position": 0,
+  "probes": {"exact valid probe NAME": 1},
+  "triggers": {"exact valid probe NAME": "eq1'b1"}
+}

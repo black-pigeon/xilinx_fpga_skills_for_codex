@@ -1,0 +1,5 @@
+{
+  "action": "inspect",
+  "server": "localhost:3121",
+  "vivado": "vivado"
+}

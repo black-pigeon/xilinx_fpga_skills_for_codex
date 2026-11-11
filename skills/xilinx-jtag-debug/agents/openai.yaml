@@ -1,0 +1,6 @@
+interface:
+  display_name: "Xilinx JTAG 与 ILA 调试"
+  short_description: "自动化 Vivado 下载、ILA 抓取与证据分析，复用 U230 上板调试流程"
+  default_prompt: "请使用 $xilinx-jtag-debug 检查板卡和镜像，完成本次授权范围内的 JTAG/ILA 调试，并记录证据与最终板卡状态。"
+policy:
+  allow_implicit_invocation: true

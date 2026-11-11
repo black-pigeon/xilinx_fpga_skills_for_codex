@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the repository's RTL skill using only the Python standard library."""
+"""Install selected repository skills using only the Python standard library."""
 import argparse
 from datetime import datetime, timezone
 import json
@@ -11,15 +11,15 @@ import tempfile
 from uuid import uuid4
 
 NAME = 'fpga-rtl-standards'
-REPOSITORY = 'https://github.com/black-pigeon/rtl_skills_for_codex'
+REPOSITORY = 'https://github.com/black-pigeon/fpga_skills_for_codex'
 ROOT = Path(__file__).resolve().parent
 
 
-def install(destination, update=False):
-    source = ROOT / 'skills' / NAME
+def install(destination, update=False, name=NAME):
+    source = ROOT / 'skills' / name
     if not (source / 'SKILL.md').is_file():
         raise ValueError('Missing skill source: ' + str(source))
-    target = destination / NAME
+    target = destination / name
     if target.is_symlink():
         raise ValueError('Destination is a symlink; update its source instead: ' + str(target))
     if target.exists() and not target.is_dir():
@@ -38,11 +38,11 @@ def install(destination, update=False):
         commit = None  # ZIP downloads need not contain .git metadata.
     destination.mkdir(parents=True, exist_ok=True)
     backup = None
-    with tempfile.TemporaryDirectory(prefix='.rtl-skill-stage-', dir=destination.parent) as tmp:
-        stage = Path(tmp) / NAME
+    with tempfile.TemporaryDirectory(prefix='.fpga-skill-stage-', dir=destination.parent) as tmp:
+        stage = Path(tmp) / name
         shutil.copytree(source, stage, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
         receipt = {
-            'repository': REPOSITORY, 'path': 'skills/' + NAME,
+            'repository': REPOSITORY, 'path': 'skills/' + name,
             'commit': commit, 'installed_at': datetime.now(timezone.utc).isoformat(),
         }
         (stage / '.install-source.json').write_text(
@@ -52,7 +52,7 @@ def install(destination, update=False):
             backup_root = destination.parent / 'skill-backups'
             backup_root.mkdir(parents=True, exist_ok=True)
             stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-            backup = backup_root / (NAME + '-' + stamp + '-' + uuid4().hex[:8])
+            backup = backup_root / (name + '-' + stamp + '-' + uuid4().hex[:8])
             target.rename(backup)
         try:
             stage.rename(target)
@@ -71,11 +71,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dest', type=Path, default=Path.home() / '.agents' / 'skills',
                         help='Skills directory (default: ~/.agents/skills)')
+    choices=sorted(p.name for p in (ROOT/'skills').iterdir() if (p/'SKILL.md').is_file())
+    parser.add_argument('--skill', nargs='+', choices=choices, default=[NAME],
+                        help='Skills to install (default: fpga-rtl-standards)')
     parser.add_argument('--update', action='store_true',
                         help='Replace an installed copy, preserving a backup outside the skills directory')
     args = parser.parse_args()
     try:
-        install(args.dest.expanduser().absolute(), args.update)
+        for name in dict.fromkeys(args.skill):
+            install(args.dest.expanduser().absolute(), args.update, name)
     except (OSError, ValueError) as exc:
         print('Install failed: ' + str(exc), file=sys.stderr)
         return 1

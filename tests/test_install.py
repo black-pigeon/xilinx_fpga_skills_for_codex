@@ -30,8 +30,28 @@ class InstallTests(unittest.TestCase):
             if file.is_file():
                 self.assertEqual(file.read_bytes(), (target / file.relative_to(source)).read_bytes())
         receipt = json.loads((target / '.install-source.json').read_text())
-        self.assertEqual(receipt['repository'], 'https://github.com/black-pigeon/rtl_skills_for_codex')
+        self.assertEqual(receipt['repository'], 'https://github.com/black-pigeon/fpga_skills_for_codex')
         self.assertEqual(receipt['path'], 'skills/' + NAME)
+
+    def test_select_debug_skill_and_record_source(self):
+        result = self.run_install('--skill', 'xilinx-jtag-debug')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        target = self.dest / 'xilinx-jtag-debug'
+        self.assertTrue((target / 'SKILL.md').is_file())
+        receipt = json.loads((target / '.install-source.json').read_text())
+        self.assertEqual(receipt['path'], 'skills/xilinx-jtag-debug')
+        self.assertFalse((self.dest / NAME).exists())
+
+    def test_install_both_skills(self):
+        result = self.run_install('--skill', NAME, 'xilinx-jtag-debug')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for name in [NAME, 'xilinx-jtag-debug']:
+            self.assertTrue((self.dest / name / 'SKILL.md').is_file())
+
+    def test_invalid_skill_name_cannot_escape_repository(self):
+        result = self.run_install('--skill', '../elsewhere')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.dest.exists())
 
     def test_existing_install_not_overwritten_without_update(self):
         target = self.dest / NAME
