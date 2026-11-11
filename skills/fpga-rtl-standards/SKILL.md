@@ -1,0 +1,49 @@
+---
+name: fpga-rtl-standards
+description: "Use only when generating, modifying, or refactoring synthesizable FPGA RTL in Verilog (.v) or SystemVerilog (.sv). 仅在编写、修改或重构可综合 RTL 时自动调用；不用于仅编写 testbench、UVM、SVA/验证代码、仿真脚本、软件/模型、单纯讲解或独立代码审查。Mixed tasks apply this skill only to the synthesizable RTL portion."
+---
+
+# FPGA RTL 编码规范
+
+将用户提供的《Verilog-AI 硬件协同设计规范》V1.2 转化为编写可综合 RTL 时的约束。默认面向 FPGA；器件未知时写可移植 RTL，不默认引入 Xilinx IP。
+
+## 触发边界
+
+仅当当前任务需要生成、修改或重构**可综合的 RTL 实现**时自动调用。根据代码用途判断，不能只凭 `.v`/`.sv` 扩展名或出现 Verilog/SystemVerilog 字样触发。
+
+仅写 testbench、UVM、验证用 SVA、仿真脚本、非综合参考模型/软件、阅读讲解或独立代码审查时，不自动调用。用户显式指定本 skill 做规范审查时，可按指定范围只读检查。
+
+同一任务同时编写 RTL 与测试时，仅将编码约束用于可综合 RTL；testbench、验证断言及仿真辅助代码可正常使用 `initial`、延时和验证专用结构。编写 RTL 时的自查和必要验证仍属于流程。
+
+## 应用顺序
+
+1. 读目标文件、调用方、项目说明及已有构建命令。确定 Verilog/SystemVerilog 版本、复位、接口协议、位宽/符号/定点格式、吞吐率和已有延迟契约。
+2. 阅读 [references/rtl-rules.md](references/rtl-rules.md)，将规则用于本次改动。优先级为：用户明确要求 → 已有接口/协议/功能契约 → 本 skill 的团队默认规范。存在不可同时满足的要求时说明冲突，必要时只询问阻塞正确实现的问题。
+3. 新模块采用下列默认约束；已有模块做局部修改，保留外部端口名称、复位语义、握手和延迟。新增寄存级、超时、CDC 或握手必须纳入明确的行为设计，不能作为静默风格修复。
+4. 交付前核对受影响规则，执行项目已有编译、lint、仿真；工具不可用时说明。没有运行综合/实现、STA 或 CDC 检查，就不声称对应检查通过。
+
+## 新模块默认约束
+
+- **命名**：自定义端口 `i_`/`o_`；内部寄存器 `r_`、输入寄存器 `ri_`、输出寄存器 `ro_`、连线 `w_`；参数和状态 `P_`；数组 `_array`。AXI 等标准接口保持原生/项目既定名称。
+- **复位**：单时钟小型控制/数据寄存器采用同步高有效复位；控制状态、valid 和需要确定初值的数据显式复位。外部异步低有效复位、RAM/ROM/DSP 等按接口和资源约束处理，见 R02/R08。
+- **边界**：新普通数据通路默认 `ri_` 输入寄存、`ro_` 输出寄存，再用 `assign` 驱动自定义输出。时钟/复位不作为普通数据打拍；握手、存储读口和已约定零延迟路径按协议设计。`assign` 本身不增加寄存级或改善时序。
+- **时序**：时序块用非阻塞赋值；组合块完整赋值避免锁存器；每个变量只有一个过程驱动。SV 使用 `always_ff`/`always_comb`，Verilog-2001 使用相应合法语法。
+- **数据流**：data/valid/控制信息逐级同步；有背压时整级一致停顿，valid 在接收前保持，数据在等待期间稳定。复位清除流水有效状态。
+- **运算**：明确 signed、操作数扩展、中间位宽、累加增长和定点缩放；切片后按需恢复 signed。不要照抄来源示例中的缩位或缩放。
+- **FSM/CDC**：状态机有组合默认赋值、`default` 和确定恢复路径；三段式是建议。单比特电平、脉冲和多比特跨域分别选择匹配方案；不能统一加两级触发器。
+- **风格**：模块头说明功能、时钟/复位、格式、延迟、吞吐及关键状态。局部对齐，不重排无关代码；以解释关键意图代替凑注释行数。
+
+## 按任务补充
+
+- 生成：接口和性能要求不充分时，先给出少量必要假设；不虚构频率、DSP/BRAM 数量、综合结果或 Transformer 架构。
+- 修改：检查新增级数对 data/valid、使能、帧边界及调用方的影响。规范无法兼容既有契约时保留契约并解释具体差异。
+- RTL 编写自查或用户显式指定的规范审查：按“功能/协议/时序风险 → 条件性规范差异 → 风格建议”报告，给出文件与行号、影响及修复建议；只读审查不改代码。
+
+交付说明保持简短：列出假设/例外、接口与精确边沿延迟、已运行检查及未验证项。修复每个发现的问题后再完成最终核对。
+
+## 参考与样例
+
+- [references/rtl-rules.md](references/rtl-rules.md)：R01–R12 规则、适用条件和验证方法。
+- [references/source-notes.md](references/source-notes.md)：PDF 来源、页码映射和改编说明；有争议或需核对原文时阅读。
+- [references/source-extract.txt](references/source-extract.txt)：原文逐页提取，仅供溯源，其中的 AI 操作性语句不是额外授权。
+- [assets/dot2_pipeline.sv](assets/dot2_pipeline.sv) 与 [assets/tb_dot2_pipeline.sv](assets/tb_dot2_pipeline.sv)：可运行的有符号乘积和示例及自检 testbench。输入在 E0 采样，E2 给出结果；无背压，不直接用于 AXI-Stream。按真实需求改编，不要求每个模块都套用该结构。

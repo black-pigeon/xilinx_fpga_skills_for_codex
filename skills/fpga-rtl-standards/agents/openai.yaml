@@ -1,0 +1,6 @@
+interface:
+  display_name: "FPGA RTL 编码规范"
+  short_description: "仅编写可综合 Verilog/SystemVerilog RTL 时应用团队编码规范"
+  default_prompt: "请使用 $fpga-rtl-standards 编写可综合 RTL，遵循团队命名、复位、流水线及接口规范，并说明验证结果。"
+policy:
+  allow_implicit_invocation: true

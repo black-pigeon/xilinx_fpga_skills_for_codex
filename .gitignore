@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+*.vvp
+obj_dir/
+work/
+.install-source.json
