@@ -42,18 +42,27 @@ module dot2_pipeline #(
     assign w_product_ab_ext = {r_product_ab[P_PRODUCT_W-1], r_product_ab};
     assign w_product_cd_ext = {r_product_cd[P_PRODUCT_W-1], r_product_cd};
 
+    // Keep the two operand pairs in separate register groups for readability.
     always_ff @(posedge i_clk) begin
         if (i_rst) begin
             ri_a_data      <= '0;
             ri_b_data      <= '0;
+        end else begin
+            if (i_data_dvalid) begin
+                ri_a_data <= i_a_data;
+                ri_b_data <= i_b_data;
+            end
+        end
+    end
+
+    always_ff @(posedge i_clk) begin
+        if (i_rst) begin
             ri_c_data      <= '0;
             ri_d_data      <= '0;
             ri_data_dvalid <= 1'b0;
         end else begin
             ri_data_dvalid <= i_data_dvalid;
             if (i_data_dvalid) begin
-                ri_a_data <= i_a_data;
-                ri_b_data <= i_b_data;
                 ri_c_data <= i_c_data;
                 ri_d_data <= i_d_data;
             end
