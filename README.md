@@ -14,6 +14,7 @@
 **只在生成、修改或重构可综合的 Verilog/SystemVerilog RTL 时自动匹配。**
 
 - 约束团队命名、按需复位、边界寄存、data/valid 对齐、算术位宽、FSM/数据通路分离、CDC、数组及排版；每时序块默认最多 3 个独立变量是团队可读性约定。
+- 通用 RTL 面向多厂商 FPGA，默认避免 `initial`、寄存器声明初值和 INIT/GSR 依赖；功能确需且已确认目标支持的 ROM/存储预置可作例外。
 - 面向 Xilinx/Vivado 时，结合 UG949 2025.1 检查控制集、RAM/SRL/DSP 推断、配置初始化、流水/扇出、属性与时序约束；按器件系列和当前工具版本采纳。详细主题和页码见 `skills/fpga-rtl-standards/references/xilinx-ug949.md`。
 - 单独编写 testbench、UVM、验证用 SVA、仿真脚本、软件/模型、代码讲解或独立审查不自动调用。
 - 同时写 RTL 和测试时，仅约束可综合 RTL 部分。
