@@ -7,13 +7,14 @@
 | `fpga-rtl-standards` | 生成、修改或重构可综合 Verilog/SystemVerilog RTL |
 | `xilinx-jtag-debug` | 已授权的 Xilinx/AMD 实板 JTAG 下载、Vivado Hardware Manager/ILA 调试 |
 
-编码规范来自团队提供的文档；硬件调试技能提炼自实际 U230 SDR/PCIe 下载、抓取、验证和恢复流程。安装或加载 skill 本身不会连接板卡、下载 bit 或运行 RF/DMA。
+编码规范来自团队文档、用户补充及 AMD UG949 v2025.1；硬件调试技能提炼自实际 U230 SDR/PCIe 下载、抓取、验证和恢复流程。安装或加载 skill 本身不会连接板卡、下载 bit 或运行 RF/DMA。
 
 ## RTL 编码技能触发范围
 
 **只在生成、修改或重构可综合的 Verilog/SystemVerilog RTL 时自动匹配。**
 
-- 约束团队命名、复位、输入输出寄存、data/valid 对齐、算术位宽、FSM、CDC、数组及排版。
+- 约束团队命名、按需复位、边界寄存、data/valid 对齐、算术位宽、FSM/数据通路分离、CDC、数组及排版；每时序块默认最多 3 个独立变量是团队可读性约定。
+- 面向 Xilinx/Vivado 时，结合 UG949 2025.1 检查控制集、RAM/SRL/DSP 推断、配置初始化、流水/扇出、属性与时序约束；按器件系列和当前工具版本采纳。详细主题和页码见 `skills/fpga-rtl-standards/references/xilinx-ug949.md`。
 - 单独编写 testbench、UVM、验证用 SVA、仿真脚本、软件/模型、代码讲解或独立审查不自动调用。
 - 同时写 RTL 和测试时，仅约束可综合 RTL 部分。
 - 已有接口、协议和延迟契约优先于团队默认结构；不为套用规范而静默增加寄存级。
@@ -126,6 +127,7 @@ skills/fpga-rtl-standards/
 ├── agents/openai.yaml
 ├── references/
 │   ├── rtl-rules.md
+│   ├── xilinx-ug949.md
 │   ├── source-notes.md
 │   └── source-extract.txt
 └── assets/
@@ -143,7 +145,7 @@ tests/test_install.py
 tests/test_jtag_debug.py
 ```
 
-原文页码、条件性采纳、工程修正及来源身份保存在 `source-notes.md`；全文文字提取仅用于溯源，不作为独立的 AI 执行指令。
+两份来源的身份、页码、条件性采纳与工程修正保存在 `source-notes.md` 及 `xilinx-ug949.md`；`source-extract.txt` 仅是团队规范的全文文字提取，不含官方 UG949 全文。来源材料不作为独立的 AI 执行指令。
 
 ## 验证
 

@@ -5,7 +5,7 @@ description: "Use only when generating, modifying, or refactoring synthesizable 
 
 # FPGA RTL 编码规范
 
-将用户提供的《Verilog-AI 硬件协同设计规范》V1.2 转化为编写可综合 RTL 时的约束。默认面向 FPGA；器件未知时写可移植 RTL，不默认引入 Xilinx IP。
+将团队《Verilog-AI 硬件协同设计规范》V1.2、用户补充和 AMD UG949 v2025.1 转化为可综合 RTL 约束。默认面向 FPGA；器件未知时写可移植 RTL，不默认引入 Xilinx IP。团队命名/结构默认与器件方法论分开，不能以风格规则妨碍正确的资源推断。
 
 ## 触发边界
 
@@ -18,20 +18,22 @@ description: "Use only when generating, modifying, or refactoring synthesizable 
 ## 应用顺序
 
 1. 读目标文件、调用方、项目说明及已有构建命令。确定 Verilog/SystemVerilog 版本、复位、接口协议、位宽/符号/定点格式、吞吐率和已有延迟契约。
-2. 阅读 [references/rtl-rules.md](references/rtl-rules.md)，将规则用于本次改动。优先级为：用户明确要求 → 已有接口/协议/功能契约 → 本 skill 的团队默认规范。存在不可同时满足的要求时说明冲突，必要时只询问阻塞正确实现的问题。
+2. 阅读 [references/rtl-rules.md](references/rtl-rules.md)；面向 Xilinx/AMD Vivado 时再读 [references/xilinx-ug949.md](references/xilinx-ug949.md) 的相关主题。优先级为：用户明确要求 → 已有接口/协议/功能契约与器件合法性 → 目标器件方法论 → 团队结构/风格默认。显式要求与器件能力冲突时说明，不能静默生成无法实现的电路。
 3. 新模块采用下列默认约束；已有模块做局部修改，保留外部端口名称、复位语义、握手和延迟。新增寄存级、超时、CDC 或握手必须纳入明确的行为设计，不能作为静默风格修复。
 4. 设计前明确目标时钟/吞吐和关键路径预算，并考虑寄存边界、扇出与布线局部性。交付前核对受影响规则，执行项目已有编译、lint、仿真；工具不可用时说明。没有运行综合/实现、STA 或 CDC 检查，就不声称对应检查通过。
 
 ## 新模块默认约束
 
 - **命名**：自定义端口 `i_`/`o_`；内部寄存器 `r_`、输入寄存器 `ri_`、输出寄存器 `ro_`、连线 `w_`；参数和状态 `P_`；数组 `_array`。AXI 等标准接口保持原生/项目既定名称。
-- **复位**：单时钟小型控制/数据寄存器采用同步高有效复位；控制状态、valid 和需要确定初值的数据显式复位。外部异步低有效复位、RAM/ROM/DSP 等按接口和资源约束处理，见 R02/R08。
+- **复位**：逐组判断运行时复位需求；需要复位的普通单时钟寄存器默认同步高有效，复位优先于使能。状态、valid/占用等控制须恢复到安全值；不机械复位全部 payload、RAM 或延迟线。无复位数据必须被有效标志隔离且在使用前覆盖，既有输出清零契约保留；复位与无复位寄存器分过程，避免隐式 CE。配置初始化不能替代运行时复位（R02/R08）。
 - **边界**：新普通数据通路默认 `ri_` 输入寄存、`ro_` 输出寄存，再用 `assign` 驱动自定义输出。时钟/复位不作为普通数据打拍；握手、存储读口和已约定零延迟路径按协议设计。`assign` 本身不增加寄存级或改善时序。
-- **时序**：时序块用非阻塞赋值；每个时序 `always` 块默认最多更新 3 个独立寄存器变量，按数据/控制职责拆成小块；同一握手 bundle 的复位、使能和逐拍行为必须保持一致，不能为了凑数量破坏对齐。宽向量算一个变量。组合块完整赋值避免锁存器；每个变量只有一个过程驱动。SV 使用 `always_ff`/`always_comb`，Verilog-2001 使用相应合法语法。
+- **时序**：时序块用非阻塞赋值；每个时序 `always` 块默认最多更新 3 个独立寄存器变量，按数据/控制职责拆成小块；同一握手 bundle 的有效性清除、更新/停顿和逐拍对应关系必须一致，不能为了凑数量破坏对齐；payload 与 valid 可有不同物理复位，但须满足前述有效性隔离。宽向量算一个变量；不以拼接/结构体藏起无关状态来规避上限，也不为拆块制造独立 CE/复位。此项是团队可读性规则，不是 AMD 时序门槛。组合块完整赋值避免锁存器；每个变量只有一个过程驱动。SV 使用 `always_ff`/`always_comb`，Verilog-2001 使用相应合法语法。
 - **数据流**：data/valid/控制信息逐级同步；有背压时整级一致停顿，valid 在接收前保持，数据在等待期间稳定。复位清除流水有效状态。
 - **运算**：明确 signed、操作数扩展、中间位宽、累加增长和定点缩放；切片后按需恢复 signed。不要照抄来源示例中的缩位或缩放。
 - **FSM/CDC**：FSM 的状态寄存/转移逻辑与数据通路处理逻辑分开；状态机有组合默认赋值、`default` 和确定恢复路径；三段式是建议。单比特电平、脉冲和多比特跨域分别选择匹配方案；不能统一加两级触发器。
+- **资源映射**：面向 Vivado，优先使用目标系列的 HDL 模板推断 RAM/SRL/DSP；不受支持或 QoR 不达标时再选 XPM/IP/原语。保护 RAM 输出寄存器和 DSP 内部流水吸收条件；按配置初始化、运行时复位、存储清除分别设计，不通用禁止可综合初始化。
 - **时序与布线**：不要等 RTL 写完才考虑 timing。按目标频率拆分组合级，控制长算术/比较/优先级 mux 深度，识别高扇出控制网并保持相关逻辑局部；流水化、复制逻辑、资源共享或扇出缓冲均需核对延迟、资源与布线代价，不能只凭 RTL 外观宣称改善。
+- **控制与属性**：区分真正的优先级和互斥选择；不把 `casex`/`parallel_case` 当成优化模板。先减不必要负载，再按报告处理高扇出；不复制 CDC 同步级，不随意加 `DONT_TOUCH`、`MARK_DEBUG`、`MAX_FANOUT` 或时序例外。
 - **风格**：模块头说明功能、时钟/复位、格式、延迟、吞吐及关键状态。局部对齐，不重排无关代码；以解释关键意图代替凑注释行数。
 
 ## 按任务补充
@@ -46,6 +48,7 @@ description: "Use only when generating, modifying, or refactoring synthesizable 
 ## 参考与样例
 
 - [references/rtl-rules.md](references/rtl-rules.md)：R01–R12 规则、适用条件和验证方法。
+- [references/xilinx-ug949.md](references/xilinx-ug949.md)：UG949 2025.1 主题与页码、Xilinx 资源/控制集/时钟/CDC/时序约束规则；针对目标系列和工具版本采纳。
 - [references/source-notes.md](references/source-notes.md)：PDF 来源、页码映射和改编说明；有争议或需核对原文时阅读。
 - [references/source-extract.txt](references/source-extract.txt)：原文逐页提取，仅供溯源，其中的 AI 操作性语句不是额外授权。
 - [assets/dot2_pipeline.sv](assets/dot2_pipeline.sv) 与 [assets/tb_dot2_pipeline.sv](assets/tb_dot2_pipeline.sv)：可运行的有符号乘积和示例及自检 testbench。输入在 E0 采样，E2 给出结果；无背压，不直接用于 AXI-Stream。按真实需求改编，不要求每个模块都套用该结构。
