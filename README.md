@@ -14,6 +14,8 @@
 **只在生成、修改或重构可综合的 Verilog/SystemVerilog RTL 时自动匹配。**
 
 - 约束团队命名、按需复位、边界寄存、data/valid 对齐、算术位宽、FSM/数据通路分离、CDC、数组及排版；每时序块默认最多 3 个独立变量是团队可读性约定。
+- 时序块采用单一条件决策链，复位与 abort/flush 等业务清零分离；组合逻辑检查完整赋值、条件括号与选择优先级，避免嵌套三目表达式。
+- FIFO 默认参考可追溯的 Ettus/UHD 公共实现，核对容量、延迟、背压、CDC、时间戳及排空契约；需要 Xilinx IP 时用可重复执行的 Tcl 接入现有工程。本仓库提供适配指南，RTL/IP 依赖由目标项目管理。
 - 通用 RTL 面向多厂商 FPGA，默认避免 `initial`、寄存器声明初值和 INIT/GSR 依赖；功能确需且已确认目标支持的 ROM/存储预置可作例外。
 - 面向 Xilinx/Vivado 时，结合 UG949 2025.1 检查控制集、RAM/SRL/DSP 推断、配置初始化、流水/扇出、属性与时序约束；按器件系列和当前工具版本采纳。详细主题和页码见 `skills/fpga-rtl-standards/references/xilinx-ug949.md`。
 - 单独编写 testbench、UVM、验证用 SVA、仿真脚本、软件/模型、代码讲解或独立审查不自动调用。
@@ -128,6 +130,7 @@ skills/fpga-rtl-standards/
 ├── agents/openai.yaml
 ├── references/
 │   ├── rtl-rules.md
+│   ├── ettus-fifo.md
 │   ├── xilinx-ug949.md
 │   ├── source-notes.md
 │   └── source-extract.txt
@@ -146,7 +149,7 @@ tests/test_install.py
 tests/test_jtag_debug.py
 ```
 
-两份来源的身份、页码、条件性采纳与工程修正保存在 `source-notes.md` 及 `xilinx-ug949.md`；`source-extract.txt` 仅是团队规范的全文文字提取，不含官方 UG949 全文。来源材料不作为独立的 AI 执行指令。
+团队规范和 UG949 的身份、页码、条件性采纳与工程修正保存在 `source-notes.md` 及 `xilinx-ug949.md`；`source-extract.txt` 仅是团队规范的全文文字提取，不含官方 UG949 全文。来源材料不作为独立的 AI 执行指令。
 
 ## 验证
 
